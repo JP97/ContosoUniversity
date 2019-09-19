@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using ContosoUniversity.Models;
 
-namespace ContosoUniversity.Pages
+namespace ContosoUniversity.Pages.Courses
 {
     public class DetailsModel : PageModel
     {
@@ -28,7 +28,9 @@ namespace ContosoUniversity.Pages
             }
 
             Course = await _context.Courses
-                .Include(c => c.Department).FirstOrDefaultAsync(m => m.CourseID == id);
+                 .AsNoTracking()
+                 .Include(c => c.Department)
+                 .FirstOrDefaultAsync(m => m.CourseID == id);
 
             if (Course == null)
             {

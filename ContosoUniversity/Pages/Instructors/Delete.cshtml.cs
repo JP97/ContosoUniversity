@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using ContosoUniversity.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using ContosoUniversity.Models;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace ContosoUniversity.Pages
+namespace ContosoUniversity.Pages.Instructors
 {
     public class DeleteModel : PageModel
     {
@@ -19,7 +17,7 @@ namespace ContosoUniversity.Pages
         }
 
         [BindProperty]
-        public Course Course { get; set; }
+        public Instructor Instructor { get; set; }
 
         public async Task<IActionResult> OnGetAsync(int? id)
         {
@@ -28,10 +26,9 @@ namespace ContosoUniversity.Pages
                 return NotFound();
             }
 
-            Course = await _context.Courses
-                .Include(c => c.Department).FirstOrDefaultAsync(m => m.CourseID == id);
+            Instructor = await _context.Instructors.FirstOrDefaultAsync(m => m.ID == id);
 
-            if (Course == null)
+            if (Instructor == null)
             {
                 return NotFound();
             }
@@ -45,14 +42,23 @@ namespace ContosoUniversity.Pages
                 return NotFound();
             }
 
-            Course = await _context.Courses.FindAsync(id);
+            Instructor instructor = await _context.Instructors
+                .Include(i => i.CourseAssignments)
+                .SingleAsync(i => i.ID == id);
 
-            if (Course != null)
+            if (instructor == null)
             {
-                _context.Courses.Remove(Course);
-                await _context.SaveChangesAsync();
+                return RedirectToPage("./Index");
             }
 
+            var departments = await _context.Departments
+                .Where(d => d.InstructorID == id)
+                .ToListAsync();
+            departments.ForEach(d => d.InstructorID = null);
+
+            _context.Instructors.Remove(instructor);
+
+            await _context.SaveChangesAsync();
             return RedirectToPage("./Index");
         }
     }
